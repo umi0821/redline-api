@@ -1,6 +1,5 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import StreamingResponse
-from fastapi import Request
 import cv2
 import numpy as np
 import io
@@ -10,14 +9,15 @@ app = FastAPI()
 
 @app.post("/draw-lines")
 async def draw_red_lines(request: Request, file: UploadFile = File(...)):
-    # リクエスト本体を読み込み（multipart/form-data）
     form = await request.form()
     lines_data = form.get("lines")
-    
-    if isinstance(lines_data, str):
+
+    try:
+        # 文字列だったらパースする（文字列で送られた場合）
         line_data = json.loads(lines_data)
-    else:
-        line_data = lines_data  # 万が一違う形式ならそのまま使う
+    except:
+        # すでに配列ならそのまま（配列で送られた場合）
+        line_data = lines_data
 
     contents = await file.read()
     npimg = np.frombuffer(contents, np.uint8)
@@ -30,4 +30,3 @@ async def draw_red_lines(request: Request, file: UploadFile = File(...)):
 
     _, encoded_img = cv2.imencode('.jpg', img)
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
-
