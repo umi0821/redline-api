@@ -22,4 +22,3 @@ async def draw_red_lines(file: UploadFile = File(...), lines: str = Form(...)):
 
     _, encoded_img = cv2.imencode('.jpg', img)
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
-
